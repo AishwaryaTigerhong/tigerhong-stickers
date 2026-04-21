@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TigerHong — Product Info</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Calibri,'Trebuchet MS',sans-serif;background:#f0e8df;min-height:100vh;padding:20px 16px 48px;}
+.card{background:#fff;border-radius:12px;overflow:hidden;max-width:520px;margin:0 auto;box-shadow:0 6px 32px rgba(139,94,60,0.18);}
+.head{background:#8B5E3C;padding:20px 24px;display:flex;align-items:center;gap:14px;}
+.head-badge{width:46px;height:46px;background:rgba(255,255,255,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0;}
+.co-name{font-size:26px;font-weight:700;color:#fff;letter-spacing:2px;line-height:1.1;}
+.co-sub{font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.body{padding:24px 24px 18px;}
+.prod-name{font-size:23px;font-weight:700;color:#111;line-height:1.2;}
+.prod-cat{font-size:11px;font-weight:700;color:#8B5E3C;letter-spacing:1.5px;text-transform:uppercase;margin-top:5px;margin-bottom:18px;}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:1.5px;color:#6b4828;text-transform:uppercase;margin-bottom:11px;}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;}
+.spec{display:flex;flex-direction:column;gap:3px;}
+.spec-k{font-size:10px;color:#aaa;}
+.spec-v{font-size:14px;font-weight:700;color:#111;}
+.divider{height:1px;background:#ecddd0;margin:18px 0;}
+.desc-text{font-size:14px;color:#333;line-height:1.75;}
+.foot{background:#faf7f4;border-top:1px solid #ecddd0;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.foot-left{display:flex;flex-direction:column;gap:2px;}
+.foot-url{font-size:12px;font-weight:700;color:#8B5E3C;}
+.foot-tel{font-size:11px;color:#555;}
+.foot-ori{font-size:9px;color:#aaa;letter-spacing:1px;text-transform:uppercase;}
+.loading{max-width:520px;margin:80px auto;text-align:center;color:#8B5E3C;font-size:16px;}
+.error{max-width:520px;margin:60px auto;text-align:center;padding:36px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(139,94,60,0.12);}
+.error h2{font-size:22px;color:#8B5E3C;margin-bottom:10px;}
+.error p{font-size:14px;color:#777;line-height:1.6;}
+@media(max-width:440px){
+  .specs{grid-template-columns:1fr;}
+  .co-name{font-size:22px;}
+  .head{padding:16px 18px;}
+  .body{padding:18px 18px 14px;}
+  .foot{padding:12px 18px;}
+}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Loading product information…</div></div>
+<script>
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function sp(k,v){
+  if(!v) return '';
+  return '<div class="spec"><div class="spec-k">'+k+'</div><div class="spec-v">'+esc(v)+'</div></div>';
+}
+function section(title,pairs){
+  var rows=pairs.map(function(p){return sp(p[0],p[1]);}).filter(Boolean).join('');
+  if(!rows) return '';
+  return '<div class="divider"></div><div class="sec-title">'+title+'</div><div class="specs">'+rows+'</div>';
+}
+
+// Decode URL-safe base64 back to string
+function b64Decode(str){
+  // restore padding
+  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  while(str.length % 4) str += '=';
+  var bin = atob(str);
+  // UTF-8 decode
+  try{
+    return decodeURIComponent(escape(bin));
+  }catch(e){
+    return bin;
+  }
+}
+
+function render(d){
+  var initial = (d.co||'T').charAt(0).toUpperCase();
+  document.title = (d.pn||'Product Info') + ' — ' + (d.co||'TigerHong');
+
+  document.getElementById('root').innerHTML =
+    '<div class="card">'+
+      '<div class="head">'+
+        '<div class="head-badge">'+initial+'</div>'+
+        '<div>'+
+          '<div class="co-name">'+esc(d.co||'TIGERHONG')+'</div>'+
+          '<div class="co-sub">Product Information</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="body">'+
+        '<div class="prod-name">'+esc(d.pn||'—')+'</div>'+
+        (d.ca?'<div class="prod-cat">'+esc(d.ca)+'</div>':'')+
+        section('Identification',[['Model',d.mo],['Asset / Tag ID',d.ai]])+
+        section('Technical specifications',[['Voltage / Power',d.vo],['Operating temp.',d.te],['Warranty',d.wa]])+
+        section('Installation & service',[['Installation date',d.id],['Next service due',d.sv],['Installed by',d.tc],['Location',d.lo]])+
+        (d.de?'<div class="divider"></div><div class="sec-title">Description</div><div class="desc-text">'+esc(d.de)+'</div>':'')+
+      '</div>'+
+      '<div class="foot">'+
+        '<div class="foot-left">'+
+          (d.we?'<div class="foot-url">'+esc(d.we)+'</div>':'')+
+          (d.ph?'<div class="foot-tel">'+esc(d.ph)+'</div>':'')+
+        '</div>'+
+        (d.or?'<div class="foot-ori">Made in '+esc(d.or)+'</div>':'')+
+      '</div>'+
+    '</div>';
+}
+
+(function(){
+  var hash = window.location.hash.slice(1);
+  var root = document.getElementById('root');
+
+  if(!hash){
+    root.innerHTML='<div class="error"><h2>No product data</h2><p>This page opens automatically when you scan a TigerHong QR sticker.</p></div>';
+    return;
+  }
+
+  try{
+    var d;
+    if(hash.slice(0,3)==='b64'){
+      // Current format: URL-safe base64 encoded JSON
+      var json = b64Decode(hash.slice(4));
+      d = JSON.parse(json);
+    } else if(hash.slice(0,4)==='lzw2'||hash.slice(0,3)==='lzw'){
+      // Legacy LZW format fallback — just show error
+      throw new Error('old format');
+    } else {
+      // Plain encoded JSON fallback
+      d = JSON.parse(decodeURIComponent(hash));
+    }
+    render(d);
+  }catch(e){
+    root.innerHTML='<div class="error"><h2>Could not read product data</h2><p>Please re-generate the QR sticker in the sticker maker app and try again.</p></div>';
+  }
+})();
+</script>
+</body>
+</html>
